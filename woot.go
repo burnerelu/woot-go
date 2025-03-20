@@ -6,6 +6,7 @@ import (
 
 var (
 	ErrInvalidIndex = errors.New("invalid insert index")
+	ErrInvalidWChar = errors.New("invalid wcharacter")
 	ErrNotFound     = errors.New("element not found")
 )
 
@@ -34,6 +35,16 @@ type WOOT struct {
 	str   WString //
 }
 
+func (w *WOOT) Insert(wchar WCharacter) error {
+	err := w.str.Insert(wchar)
+
+	if err == nil {
+		w.clock += 1
+	}
+
+	return err
+}
+
 // Inserts at a specific position in the WString. TODO might need to change to insert in between two characters
 func (w *WOOT) InsertAt(index int, value rune) error {
 	err := w.str.InsertAt(index, WCharacter{id: ID{w.site, w.clock}, v: true, c: value})
@@ -46,6 +57,7 @@ func (w *WOOT) InsertAt(index int, value rune) error {
 
 }
 
+// Textual representation of a WString
 func (s WString) Text() []rune {
 	// Skip the start and end markers
 	content := make([]rune, 0, len(s)-2)
@@ -85,6 +97,22 @@ func (s *WString) IthVisible(index int) (rune, error) {
 	}
 
 	return 0, ErrNotFound
+}
+
+func (s *WString) Insert(value WCharacter) error {
+	for idx, v := range *s {
+		if v.id == value.cp && (*s)[idx+1].id == value.cn {
+
+			*s = append(*s, WCharacter{})
+			copy((*s)[idx+2:], (*s)[idx+1:])
+
+			(*s)[idx+1] = value
+
+			return nil
+		}
+	}
+
+	return ErrInvalidWChar
 }
 
 func (s *WString) InsertAt(index int, value WCharacter) error {
